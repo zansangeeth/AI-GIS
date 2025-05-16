@@ -34,6 +34,28 @@ function loadMap(data) {
 
     map.on('load', () => {
       addGeojsonToMap(data);
+
+      const tooltip = document.getElementById('tooltip');
+
+      map.on('mousemove', layerId, (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+
+        if (e.features.length > 0) {
+          const feature = e.features[0];
+          const name = feature.properties?.LAD13NM || 'Unknown';
+
+          tooltip.innerHTML = name;
+          tooltip.style.left = `${e.originalEvent.pageX + 10}px`;
+          tooltip.style.top = `${e.originalEvent.pageY + 10}px`;
+          tooltip.style.display = 'block';
+        }
+      });
+
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+        tooltip.style.display = 'none';
+      });
+
     });
   } else {
     map.getSource('geojson-data').setData(data);
