@@ -1,0 +1,28 @@
+body {
+  font-family: sans-serif;
+  margin: 20px;
+}
+
+#map {
+  width: 100%;
+  height: 500px;
+  margin-top: 20px;
+  border: 1px solid #ccc;
+}
+
+textarea {
+  width: 100%;
+  height: 60px;
+  margin-top: 10px;
+}
+
+#results table {
+  margin-top: 20px;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#results th, #results td {
+  border: 1px solid #ccc;
+  padding: 5px;
+}

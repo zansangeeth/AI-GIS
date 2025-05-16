@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GIS AI Agent</title>
+  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <h1>GIS AI Agent – Spatial Analysis</h1>
+
+  <input type="file" id="fileInput" accept=".geojson" />
+  <textarea id="prompt" placeholder="Enter analysis prompt..."></textarea>
+  <button onclick="analyze()">Analyze</button>
+
+  <div id="map"></div>
+  <div id="results"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+  <script src="app.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+
+</body>
+</html>
