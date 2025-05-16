@@ -17,6 +17,19 @@
   <div id="map"></div>
   <div id="results"></div>
 
+  <div id="tooltip" style="
+    position: absolute;
+    background: white;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 12px;
+    display: none;
+    z-index: 1000;">
+  </div>
+
+
   <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
   <script src="app.js"></script>
