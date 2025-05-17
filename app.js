@@ -92,45 +92,88 @@ function addGeojsonToMap(data) {
   });
   map.fitBounds(bounds, { padding: 20 });
 }
-
-function analyze() {
+async function analyze() {
   const prompt = document.getElementById('prompt').value.trim();
-  if (!geojsonData || !prompt) {
-    return alert("Please upload a GeoJSON and enter a prompt.");
+
+  if (!prompt || !geojsonData) {
+    alert("Please upload GeoJSON and enter a prompt.");
+    return;
   }
 
-  // Match prompt: "features within 10km of Hartlepool"
-const match = prompt.match(/within\s+(\d+)\s*(km|kilometers)\s+of\s+(.*)/i);
-if (match) {
-  const distance = parseFloat(match[1]);
-  const unit = match[2].toLowerCase().startsWith("km") ? "kilometers" : "meters";
-  const placeName = match[3].trim().toLowerCase();
+  try {
+    // Step 1: Call your FastAPI backend
+    const response = await fetch('http://localhost:8000/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
 
-  const targetFeature = geojsonData.features.find(f =>
-    f.properties?.LAD13NM?.toLowerCase() === placeName
-  );
+    if (!response.ok) {
+      throw new Error("Backend error: " + (await response.text()));
+    }
 
-  if (!targetFeature) {
-    const names = geojsonData.features.map(f => f.properties?.LAD13NM).join(', ');
-    return alert(`Place "${placeName}" not found.\nTry one of:\n${names}`);
-  }
+    const data = await response.json();
+    console.log("Parsed LLM result:", data);
 
-  const buffer = turf.buffer(targetFeature, distance, { units: unit });
-
-  const results = geojsonData.features.filter(f =>
-    f !== targetFeature && turf.booleanIntersects(buffer, f)
-  );
-
-  map.getSource('geojson-data').setData({
-    type: "FeatureCollection",
-    features: [targetFeature, buffer, ...results]
-  });
-
-  renderTable(results);
-} else {
-    alert("Prompt not recognized. Try: 'features within 10km of feature ID X'");
+    // Step 2: Act on LLM structured output
+    handleGISOperation(data);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to analyze prompt.");
   }
 }
+
+function handleGISOperation(data) {
+  const { operation, target, distance, unit } = data;
+
+  const features = geojsonData.features;
+
+  if (operation === "buffer") {
+    const feature = features.find(f =>
+      f.properties?.LAD13NM?.toLowerCase() === target.toLowerCase()
+    );
+
+    if (!feature) return alert(`Feature "${target}" not found`);
+
+    const buffered = turf.buffer(feature, distance, { units: unit || 'kilometers' });
+
+    map.getSource('geojson-data').setData({
+      type: "FeatureCollection",
+      features: [feature, buffered]
+    });
+
+    renderTable([buffered]);
+  }
+
+  else if (operation === "merge") {
+    const targets = target.split(",").map(t => t.trim().toLowerCase());
+    const selected = features.filter(f =>
+      targets.includes(f.properties?.LAD13NM?.toLowerCase())
+    );
+
+    if (selected.length < 2) return alert("At least two valid features required for merging");
+
+    let merged = selected[0];
+    for (let i = 1; i < selected.length; i++) {
+      merged = turf.union(merged, selected[i]);
+    }
+
+    merged.properties = { note: `Merged: ${targets.join(" + ")}` };
+
+    map.getSource('geojson-data').setData({
+      type: "FeatureCollection",
+      features: [merged]
+    });
+
+    renderTable([merged]);
+  }
+
+  else {
+    alert(`Unsupported operation: ${operation}`);
+  }
+}
+
+
 
 
 function renderTable(features) {
